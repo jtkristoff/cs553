@@ -1,0 +1,59 @@
+
+@inproceedings{shapiro_conflict-free_2011,
+	title = {Conflict-free replicated data types},
+	booktitle = {Symposium on {Self}-{Stabilizing} {Systems}},
+	publisher = {Springer},
+	author = {Shapiro, Marc and Preguiça, Nuno and Baquero, Carlos and Zawirski, Marek},
+	year = {2011},
+	pages = {386--400}
+}
+
+@article{letia_crdts:_2009,
+	title = {{CRDTs}: {Consistency} without concurrency control},
+	volume = {abs/0907.0929},
+	url = {http://arxiv.org/abs/0907.0929},
+	journal = {CoRR},
+	author = {Letia, Mihai and Preguiça, Nuno M. and Shapiro, Marc},
+	year = {2009}
+}
+
+@incollection{baquero_making_2014,
+	address = {Berlin, Heidelberg},
+	title = {Making {Operation}-{Based} {CRDTs} {Operation}-{Based}},
+	isbn = {978-3-662-43352-2},
+	url = {https://doi.org/10.1007/978-3-662-43352-2_11},
+	abstract = {Conflict-free Replicated Datatypes (CRDT) are usually classified as either state-based or operation-based. However, the standard definition of op-based CRDTs is very encompassing, allowing even sending the full-state, blurring the distinction. We introduce pure op-based CRDTs, that can only send operations to other replicas, drawing a clear distinction from state-based ones. Datatypes with commutative operations can be trivially implemented as pure op-based CRDTs using standard reliable causal delivery. We propose an extended API – tagged reliable causal broadcast – that provides causality information upon delivery, and show how it can be used to also implement other datatypes having non-commutative operations, through the use of a PO-Log – a partially ordered log of operations – inside the datatype. A semantically-based PO-Log compaction framework, using both causality and what we denote by causal stability, allows obtaining very compact replica state for pure op-based CRDTs, while also benefiting from small message sizes.},
+	booktitle = {Distributed {Applications} and {Interoperable} {Systems}: 14th {IFIP} {WG} 6.1 {International} {Conference}, {DAIS} 2014, {Held} as {Part} of the 9th {International} {Federated} {Conference} on {Distributed} {Computing} {Techniques}, {DisCoTec} 2014, {Berlin}, {Germany}, {June} 3-5, 2014, {Proceedings}},
+	publisher = {Springer Berlin Heidelberg},
+	author = {Baquero, Carlos and Almeida, Paulo Sérgio and Shoker, Ali},
+	editor = {Magoutis, Kostas and Pietzuch, Peter},
+	year = {2014},
+	note = {DOI: 10.1007/978-3-662-43352-2\_11},
+	pages = {126--140}
+}
+
+@misc{hoff_how_2014,
+	title = {How {League} of {Legends} {Scaled} {Chat} to 70 million {Players} - {It} takes {Lots} of minions},
+	url = {http://highscalability.com/blog/2014/10/13/how-league-of-legends-scaled-chat-to-70-million-players-it-t.html},
+	journal = {High Scalability},
+	author = {Hoff, Todd},
+	month = oct,
+	year = {2014}
+}
+
+@article{brackconflict,
+  title={Conflict-free replicated data types},
+  author={Brack, Nicolas and Van Roy, Peter}
+}
+
+@phdthesis{shapiro2011comprehensive,
+  title={A comprehensive study of convergent and commutative replicated data types},
+  author={Shapiro, Marc and Pregui{\c{c}}a, Nuno and Baquero, Carlos and Zawirski, Marek},
+  year={2011},
+  school={Inria--Centre Paris-Rocquencourt; INRIA}
+}
+
+@misc{Shapiro_talk,
+  title = {Shapiro_talk},
+  url = {https://www.youtube.com/watch?v=ebWVLVhiaiY}
+}
