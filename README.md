@@ -1,5 +1,13 @@
 # UIC CS 553 - Fall 2017
 
+[Course Home Page](https://www.cs.uic.edu/~ajayk/c553fa17.html)
+
+The class presentation was on CRDTs and can be found in the
+corresponding subdirectory.  The term paper topic was
+peer-to-peer DNS which can be found in the report subdirectory.
+
+Lecture and book summary as well as study notes for exams to follow.
+
 For each topic, identify the ''what'', ''why'', and ''how''.   That is:
 
 * *What:* A summary of topic, idea, or algorithm.  Some assumptions may be made, but others may need to be identified.
