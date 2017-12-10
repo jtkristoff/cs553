@@ -355,10 +355,76 @@ coveragecast alogirhm is specified as follows:
  * At the root, when a report is received from all child nodes, the
    gloal function is evaluated using the reports.  Terminate.
 
-## Sync 1-source shortest path
+## Sync 1-source shortest path: synchronous Bellman-Ford
+
+**Overview:** Given a weighted graph of unidirectional links, the
+Bellman-Ford algorithm finds the shortest path from a given node to all
+other nodes.  The algorithm is correct when there are no cyclic paths
+having negative weight.  The assumed toplogy is (**N**, **L**) is not
+known to any process.  A node only knows about the incident links and
+their weights.  It is assumed that the processes know the number of odes
+|**N**| = **n**.  The algorithm is uniform and the assumption on **n**
+is required for termination.
+
+**Complexity**: time complexity is **n - 1** rounds, message complexity
+is **(n - 1)l** messages.
+
+**Algorithm**:
+
+
+```
+# local variables
+int length = infinity
+int parent = parent
+set of int Neighbors = set of neighbors
+set of int { weight_i,j, weight_j,i | j E Neighbors } = known values of incident links
+
+# message types
+UPDATE
+
+if i = i_0
+    length = 0
+
+# received UPDATE ( i_0, length_j) from j 
+for round = 1 to n - 1
+    send UPDATE(i, length) to all neighbors
+    await UPDATE(j, length_j) from each j E Neighbors
+    for each j E Neighbors
+        if length > (length_j + weight_j,i)
+            length = length_j + weight_j,i
+            parent = j
+```
 
 ## Distance Vector Routing
-## Async 1-source shortest path
+
+When network graph is dynamically changing, the graph never stabilizes.
+Maintain an array of LENGTH[1..n] where LENGTH[k] denotes the length
+measure from k.  Maintain similar array for PARENT.  Processes exchange
+distance vectors periodically since this is async.
+
+## Async 1-source shortest path: asynchronous Bellman-Ford
+
+```
+# local variables
+int length = infinity
+set of int Neighbors = set of neighbors
+set of int [weight_i,j, weight_j,i] | j E Neighbors] = known values of weights of incident links
+
+# message types
+UPDATE
+
+if i == i_0
+    length = 0
+    send UPDATE(i_0, 0) to all neighbors
+    terminate
+
+# when UPDATE(i_0, length_j) arrives from j
+if (length > (length_j + weight_j,i)
+    length = length_j + weight_j,i
+    parent = j
+    send UPDATE(i_0, length) to all neighbors
+````
+
 ## All sources shortest path: Floyd-Warshall
 ## Sync, async constrained flooding
 ## MST, sync
