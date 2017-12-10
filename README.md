@@ -532,16 +532,114 @@ for round = 1 to diameter d
 ```
 
 ## MST, sync
+
+Minimum-weight spanning tree algorithm, synchronous.  Minimizes the cost
+of transmission from any node to any node.  Assumes entire graph is
+available for examination.  A *forest* (i.e. a disjoint union of trees) is
+a graph in which any pair of nodes is connectd by at most one path.  A
+*spanning forest* of an undirected graph *(N, L)* is a maximal forest of
+*(N, L)*.  When a spanning forest is connected, it becomes a spanning
+tree.
+
 ## MST, async
+
 ## Synchronizers: simple, alpha, beta, gamma
-## Maximal independent set (MIS)
+
+Generic class of algorithms that transform algorithms from synchronous
+to asynchronous are known as synchronizers.
+
+Observations:
+
+ * Consider only failure-free systems.
+ * They can be complex.  Tailor made async algo may be more efficient.
+
+**Simple**: each process sends one and only one message to every
+neighbor in a round.
+
+**alpha:** every message requires an acknowledgement.
+
+**beta**: assumes a rooted spanning tree
+
+**gamma: combines alpha and beta.
+
+Process safety: process *i* is safe in a round if all messages sent by
+*i* have been received.  Requires acknowledges.
+
+## Maximal independent set (MIS) - Luby's Algorithm
+
+A maximal set of nodes in a graph (can't add other nodes since they would
+have an incident edge to an existing node).
+
 ## Connected dominating set (CDS)
+
+A set in which every node has a vertex to one of the nodes in the set.
+Finding a set of size k <|N| is NP complete.
+
 ## Compact routing tables
+
+Routing tables could be created such that there is a route for each
+destination n.  Scaling this, but reducing the size of the routing
+table can be done by several schemes.
+
+**Hiearchical routing:** organize graph is clusters, where a clusterhead
+represents the cluster at the next higher level.
+
+**Tree-labeling:** logical tree topology.
+
+**Interval routing:** eliminate need to send packets only over tree
+edges.
+
+**Prefix routing:** overcomes drawback of interval routing (not CIDR,
+but like it).
+
 ## Leader election: LCR algorithm
+
+Often needed because algorithms are not completely symmetric.  Often
+uses a ring topology.
+
+LCR algorihtm:
+
+```
+# variables
+boolean partiicpate = false
+
+# message types
+PROBE integer
+SELECTED integer
+
+# when a process wakes up to participate in leader election
+send PROBE(i) to right neighbor
+participate = true
+
+# when a PROBE(k) message arrives from left neighbor Pj
+if participate = false
+    execute step 1 (wake up, send to right neighbor) first
+if i > k
+    discard the probe
+else if i < k
+    forward PROBE(k) to right neighbor
+else if i == k
+    declare i is the leader
+    circulate SELECTED(i) to right neighbor
+
+# when a SELECTED(x) message arrives from left neighbor
+if x != i
+    note x as leader and forwadr message to right neighbor
+else
+    do not forward the SELECTED message
+```
+
 ## Challenges in designing distributed graph algorithms
+
+Graph changes and failures complicate matters.
+
 ### Object replication
 
-# Global State and Snapshot Recording Algorithms (Chapter 4)
+On tree overlay, expand tree when read cost greater than write cost.
+Shrink tree when write cost is higher.
+
+
+# Global State and Snapshot Recording Algorithms - Chapter 4
 
 A consistent global state or consistent snapshot is used to analyze,
 test, and verify properties associated with distributed executions.
