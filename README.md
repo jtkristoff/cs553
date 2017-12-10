@@ -651,6 +651,24 @@ and algorithms used to obtain a consistent state or snapshot.
 
 ## Chandy-Lamport algorithm
 
+```
+# marker sending rule for process p_i
+
+1. Process p_i records its state
+2. for each outgoing channel C on which a marker has not been sent, p_i
+   sends a marker along C before p_i sends further messages along C.
+
+# market receiving rule for process p_j
+
+On receiving a marker along channel C:
+  if p_j has not record its state
+      Record the state of C as the empty set
+      Execute the "marker sending rule"
+  else
+      Record the state of C as the set of messages
+      received along C after p_j,s state was recorded
+      and before p_j received the marker along C
+```
 
 ## ~~Spezialetti-Kearns algorithm~~
 ## ~~Lai-Yang algorithm~~
@@ -660,7 +678,8 @@ and algorithms used to obtain a consistent state or snapshot.
 ## ~~Manivannan-Netzer-Singhal algorithm~~
 ## ~~R-graph~~~~~~~~
 
-# Message Ordering and Group Communication
+# Message Ordering and Group Communication - Chapter 6
+
 ## Asynchronous and FIFO Executions
 ## Casual Order
 ## Synchronous Executions
