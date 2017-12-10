@@ -334,7 +334,29 @@ if newroot == myroot
 
 ## Broadcast & convergecast on tree
 
+A spanning tree is useful for distributing (via broadcast) and
+collecting (via convergecast) information to/from all nodes.
+Convergecast can be used to discover some min/max value at each
+node for instance.  It might also be used for leader election.
+
+A broadcast is specified as follows:
+
+ * Root sends information to be broadcast to all children.  Terminate.
+ * When a (nonroot) node receives information from its parent, copy
+   it and forward it to its children.  Terminate.
+
+Convergecast is usually initiated by a root broadcast request.  A
+coveragecast alogirhm is specified as follows:
+
+ * Leaf node sends its report to its parent.  Terminate.
+ * At a nonleaf node that is not the root, when a report is received
+   from all child nodes, the collective report is sent to the parent.
+   Terminate.
+ * At the root, when a report is received from all child nodes, the
+   gloal function is evaluated using the reports.  Terminate.
+
 ## Sync 1-source shortest path
+
 ## Distance Vector Routing
 ## Async 1-source shortest path
 ## All sources shortest path: Floyd-Warshall
