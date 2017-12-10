@@ -360,14 +360,14 @@ coveragecast alogirhm is specified as follows:
 **Overview:** Given a weighted graph of unidirectional links, the
 Bellman-Ford algorithm finds the shortest path from a given node to all
 other nodes.  The algorithm is correct when there are no cyclic paths
-having negative weight.  The assumed toplogy is (**N**, **L**) is not
+having negative weight.  The assumed toplogy is (*N*, *L*) is not
 known to any process.  A node only knows about the incident links and
 their weights.  It is assumed that the processes know the number of odes
-|**N**| = **n**.  The algorithm is uniform and the assumption on **n**
+|*N*| = *n*.  The algorithm is uniform and the assumption on *n*
 is required for termination.
 
-**Complexity**: time complexity is **n - 1** rounds, message complexity
-is **(n - 1)l** messages.
+**Complexity**: time complexity is *n - 1* rounds, message complexity
+is *(n - 1)l* messages.
 
 **Algorithm**:
 
@@ -400,9 +400,12 @@ for round = 1 to n - 1
 When network graph is dynamically changing, the graph never stabilizes.
 Maintain an array of LENGTH[1..n] where LENGTH[k] denotes the length
 measure from k.  Maintain similar array for PARENT.  Processes exchange
-distance vectors periodically since this is async.
+distance vectors periodically since this is async.  Computes shortest
+path to itself.
 
 ## Async 1-source shortest path: asynchronous Bellman-Ford
+
+**Complexity:** O(*n^^3*)
 
 ```
 # local variables
@@ -426,7 +429,108 @@ if (length > (length_j + weight_j,i)
 ````
 
 ## All sources shortest path: Floyd-Warshall
+
+Computers all pairs shortest-path with length vector.
+
+**Algorithm:**
+
+```
+for pivot == 1 to n
+    for s == 1 to n
+        for t == 1 to n
+            if LENGTH[s,pivot] + LENGTH[pivot,t] < LENGTH[s,t]
+                LENGTH[s,t] = LENGTH[s,pivot] + LENGTH[pivot,t]
+            VIA[s,t] = VIA[s,pivot]
+```
+
+## Toueg's asynchronous distributed Floyd-Warshall all-pairs shortest paths
+
+```
+# local variables
+int LEN[1..n]
+int PARENT[1..n]
+set of int Neighbors = set of neighbors
+int pivot,nbh = 0
+
+# message types
+IN_TREE(pivot), NOT_IN_TREE(pivot), PIV_LEN(pivot, PIVOT_ROW[1..n])
+
+for pivot == 1 to n
+    for each neighbor nbh E Neighbors
+        if PARENT[pivot] == nbh
+            send IN_TREE[pivot] to nbh
+        else
+            send NOT_IN_TREE(pivot) to nbh
+    await IN_TREE or NOT_IN_TREE message from each neighbor
+    if LEN[pivot] != infinity
+        if pivot != i
+            receive PIV_LEN(pivot, PIVOT_ROW[1..n]) from PARENT[pivot]
+        for each neighbor nbh E Neighbors
+            if IN_TREE message was received from nbh
+                if pivot == i
+                    send PIV_LEN(pivot, LEN[1..n]) to nbh
+                else
+                    send PIV_LEN(pivot, PIVOT_ROW[1..n]) to nbh
+        for t = 1 to n
+            if LEN[pivot] + PIVOT_ROW[t] < LEN[t]
+                LEN[t] = LEN[pivot] + PIVOT_ROW[t]
+                PARENT[t] = PARENT[pivot
+```
+
 ## Sync, async constrained flooding
+
+**Overview:** This is essentially the link-state protocol.  We send a
+sequence number in the updates, which is kept track of.  Older ones are
+ignored, otherwise it is flooded out all links.
+
+
+**Complexity:* Message complexity is *2l* messages in the worst case
+where each message *M* has overhead *O*(1).  Time complexity is diameter
+*d* of sequential hops.
+
+Asynchronous flooding:
+
+
+```
+# local variables
+int SEQNO[1..n] = 0
+set of int Neighbors = set of neighbors
+
+# message types
+UPDATE
+
+# to send a message M
+if i == root
+    SEQNO[i] = SEQNO[i] + 1
+    send UPDATE(M, i, SEQNO[i]) to each j E Neighbors
+
+# when UPDATE(M, j, seqno_j) arrives from k
+if SEQNO[j] < seqno_j
+    # process the message M
+    SEQNO[j] = seqno_j
+    send UPDATE(M, j, seqno_j) to Neighbors\{k}
+else
+  # discard the message
+```
+
+Synchronous flooding:
+
+```
+# local variables
+int STATEVEC[1..n] = 0
+set of int Neighbors = set of neighbors
+
+# message types
+UPDATE
+
+STATEVEC[i] = local value
+for round = 1 to diameter d
+    send UPDATE(STATEVEC[1..n]) to each j E Neighbors
+    for count = 1 to |Neighbors|
+        await UPDATE(SV[1..n]) from some j E Neighbors
+        STATEVEC[1..n] = max(STATEVEC[1..n], SV[1..n])
+```
+
 ## MST, sync
 ## MST, async
 ## Synchronizers: simple, alpha, beta, gamma
