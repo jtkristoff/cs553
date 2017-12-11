@@ -1008,9 +1008,89 @@ unauthenticated.
 
 **Agreement variable:** will be a boolean.
 
+## Byzantine agreement problem
+
+Subject to the following conditions:
+
+1. **Agreement:** all non-faulty processes must agree on the same value.
+
+2. **Validity:** If the source process is non-fault, then the agreed
+upon value by all the non-faulty processes must be the same as the
+initial value of the source.
+
+3. **Termination:** Each non-faulty process must eventually decide on a
+value.
+
+Two flavors of the problem: **consensus** problem and the **interactive
+consistency** problem.
+
+### Consensus problem
+
+Each process must agree on a single value.  Formally:
+
+**Agreement:** all non-fault processes must agree on the same value.
+
+*Validity:** if all the non-faulty processes have the same initial
+value, then the agreed up on value by all the non-faulty processes must
+be that same value.
+
+**Termination:** each non-faulty process must eventually decide on a
+value.
+
+### interactive consistency problem
+
+Each process has an initial value, and the the correct processes must
+agree upon a set of values, with one value for each process.  Formally:
+
+**Agreement:** all non-faulty processes must agree on the same array of
+values A[v_1...v_n].
+
+**Validity:** if process i is non-faulty and its initial value is v_i,
+then all non-faulty processes agree on v_i as the ith element of the
+array A.  If process j is faulty, then the non-faulty processes can
+agree on any value for A[j].
+
+**Termination:** each onn-faulty process must eventually decide on the
+array A.
+
+## Overview of results
+
+In sync, agreement is attainable in all scenarios.  In aysnc, only if
+there is no failure.  Weaker variants for async with failures are used
+if necessary.
+
 ## Consensus Algorithm for Crash Failures (MP, synchronous)
+
+Up to f, where f < n, processes may fail in the fail-stop model and this
+can still reach consensus.  The algorithm has f+1 rounds.
+
+```
+# global constsants
+integer: f   // maximum number of crash failures tolerated
+
+# local variables
+integer: x = local value
+
+(1)  Process P_i (1 <= i <= n) executes the consensus algorithm for up
+     to f crash failures
+(1a) for round from 1 to f + 1
+(1b)     if the current value of x has not been broadcast
+(1c)         broadcast(x)
+(1d)     y_j = value (if any) received from projecess j in this round
+(1e)     x = min_forall-j(x,y_j)
+(1f) output x as the consensus value
+```
+
 ## Upper Bound on Byzantine Processes
+
+Can only be solved in sync if:
+
+  *f <= [ (n-1)/3 ]*
+
 ## Byzantine Generals (recursive formulation), (sync, msg-passing)
+
+Take the most common value received after n - 1 rounds.
+
 ## Byzantine Generals (iterative formulation), Sync, Msg-passing
 ## The Phase King Algorithm
 ## Terminating Reliable Broadcast (TRB)
@@ -1018,6 +1098,33 @@ unauthenticated.
 ## Asynchronous Renaming
 ## Reliable Broadcast
 ## Shared Memory Consensus (async)
+## Definitions of synchronization operations RMW, Compare&Swap, Fetch&Inc
+
+```
+# share vars
+register: Reg = initial value
+
+# local vars
+integer: old = initial value
+integer: key
+
+(1)  RMW(Reg, function f) returns value
+(1a) old = Reg
+(1b) Reg = f(Reg)
+(1c) return(old)
+
+(2)  Compare&Swap(Reg, key, new) returns value
+(2a) old = Reg
+(2b) if key == old
+(2c)     Reg = new
+(2d) return(old)
+
+(3)  Fetch&Inc(Reg) returns value
+(3a) old = Reg
+(3b) Reg = old + 1
+(3c) return(old)
+```
+
 ## Wait-free SM Consensus using Shared Objects
 ## Two-process Wait-free Consensus using FIFO Queue
 ## Wait-free Consensus using Compare & Swap
@@ -1027,6 +1134,21 @@ unauthenticated.
 ## Async Wait-free Renaming using Atomic Shared Object
 ## The Spitter
 
+```
+# shared variables
+integer X = undef
+boolean Y = false
+
+(1)  splitter(), executed by process P_i, 1 <= i <= n
+(1a) X = i
+(1b) if Y
+(1c)     return(right)
+(1d) else
+(1e)     Y = true
+(1f)     if X == i then return(stop)
+(1g)     else return(down)
+```
+
 # Peer-to-peer computing and overlay graphs
 ## Data Indexing and Overlays
 ### Centralized Indexing
@@ -1035,8 +1157,88 @@ Napster was an early example.
 Distributed hash table (DHT) proposals popular here.
 #### Structured Overlays
 #### Unstructued Overlays
+
+Search strategies include: flooding,TTL, expanding ring search, random walk.
+
 ### Local Indexing
 Gnutella uses local indexing.
 ## Chord Distributed Hash Table
+
+Flat key space.  Size of ring is 2^, where m is the m-bit identifier
+that serves as the node identifier.  Ring is ordered by the id.
+
+Lookup in Chord, simple method, just enumerates around the ring:
+
+```
+# variables
+integer: successor = initial value
+
+(1)  i.Locate_Successor(key), where key != i
+(1a) if key E (i,successor)
+(1b)     return(successor)
+(1c) else return( successor.Locate_Successor(key)
+```
+
+Scalable look up:
+
+```
+# variables
+integer: successor = initial value
+integer: predecessor = initial value
+integer finger[1...m]
+
+(1)  i.Locate_Sucessor(key), where key != i
+(1a) if key E (i,successor] then
+(1b)     return(successor)
+(1c) else
+(1d)     j = Closest_Preceding_Node(key)
+(1e) return(j.Locate_Successor(key))
+
+(2)  i.Closest_Preceding_Node(key), where key != i
+(2a) for count = m down to 1
+(2b)     if finger[count] E (i,key]
+(2c)         break()
+(2d) return(finger([count])
+```
+
+Manager churn:
+
+```
+# variables
+integer: successor = initial value
+integer: predessor = initial value
+integer finger[1...m]
+integer: next_finger = 1
+
+(1)  i.Create_New_Ring()
+(1a) predecessor = undef
+(1b) successor = i
+
+(2)  i.Join_Ring(j), where j is any node on the ring to be joined
+(2a) predecessor = undef
+(2b) successor = j.Locate_Successor(i)
+
+(3)  i.Stabilize      // executed periodically to verify and inform successor
+(3a) x = successor.predecessor
+(3b) if x E (i, successor)
+(3c)     successor = x
+(3d) successor.Notify(i)
+
+(4)  i.Notify(j)    // believes it is predecessor of i
+(4a) if predeccessor = undef or j E (predecessor,i)
+(4b)     transfer keys in the range (predecessor, j] to j
+(4c)     predecessor = j
+
+(5)  i.Fix_Fingers()     // executed periodically to update the finger table
+(5a) next_finger = next_finger + 1
+(5b) if next_finger > m
+(5c)     next_finger = 1
+(5d) finger[next_finger] = Locate_Successor(i+2^nextfinger-1)
+
+(6)  i.Check_Predecessor()    // executed periodically to verify whether predecessor still exists
+(6a) if predecessor has failed
+(6b)     predecessors = undef
+```
+
 ## Content Addressable Networks (CAN)
 ## Tapestry
