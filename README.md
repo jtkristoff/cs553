@@ -51,6 +51,70 @@ Four processing modes:
  3. Multiple instruction stream, single data stream (MISD)
  4. Multiple instruction stream, multiple data stream (MIMD)
 
+# Models - Chapter 2
+
+This chapter discusses how to model the state of distributed processes
+using space-time diagrams.  Generally the communications network is
+modeled as a FIFO (can be provided by things like TCP).  The global
+state of the system is a collection of local states and the
+communications channel.
+
+# Time - Chapter 3
+
+**Scalar Time:**  Simple counter, non-negative integers that make
+progress.  Each message piggybacks the clock value of the local process.
+A receiving process will take max of the received value and local clock,
+then add one for the next event.  Cannot identify concurrent events.
+
+**Vector Time:** An array of clock values for each process maintained by
+each process.  Basically a list of scalar clock values.  Update your own
+clock in the vector when you send the vector, and update your global
+vector values when you receive updates from another process.  Take more
+space, but can identify concurrent events.
+
+**Matric Time:** A collection of vector clocks.  So every process has
+a view of what other processes see for all other processes clocks.  It
+is an *n x n* matrix of clocks.
+
+# Global State and Snapshot Recording Algorithms - Chapter 4
+
+A consistent global state or consistent snapshot is used to analyze,
+test, and verify properties associated with distributed executions.
+Without a globally shared memory and clock this is a non-trivial
+challenge.
+
+This chapter discusses the issues in consistent state (or snapshots)
+and algorithms used to obtain a consistent state or snapshot.
+
+## Chandy-Lamport algorithm
+
+```
+# marker sending rule for process p_i
+
+1. Process p_i records its state
+2. for each outgoing channel C on which a marker has not been sent, p_i
+   sends a marker along C before p_i sends further messages along C.
+
+# marker receiving rule for process p_j
+
+On receiving a marker along channel C:
+  if p_j has not recorded its state
+      Record the state of C as the empty set
+      Execute the "marker sending rule"
+  else
+      Record the state of C as the set of messages
+      received along C after p_j,s state was recorded
+      and before p_j received the marker along C
+```
+
+## ~~Spezialetti-Kearns algorithm~~
+## ~~Lai-Yang algorithm~~
+## ~~Mattern's algorithm~~
+## ~~Acharya-Badrinath algorithm~~
+## ~~Alagar-Venkatesan algorithm~~
+## ~~Manivannan-Netzer-Singhal algorithm~~
+## ~~R-graph~~~~~~~~
+
 # Terminology and Basic Algorithms - Chapter 5
 
 Classifications of distributed application execution:
@@ -639,62 +703,311 @@ On tree overlay, expand tree when read cost greater than write cost.
 Shrink tree when write cost is higher.
 
 
-# Global State and Snapshot Recording Algorithms - Chapter 4
-
-A consistent global state or consistent snapshot is used to analyze,
-test, and verify properties associated with distributed executions.
-Without a globally shared memory and clock this is a non-trivial
-challenge.
-
-This chapter discusses the issues in consistent state (or snapshots)
-and algorithms used to obtain a consistent state or snapshot.
-
-## Chandy-Lamport algorithm
-
-```
-# marker sending rule for process p_i
-
-1. Process p_i records its state
-2. for each outgoing channel C on which a marker has not been sent, p_i
-   sends a marker along C before p_i sends further messages along C.
-
-# market receiving rule for process p_j
-
-On receiving a marker along channel C:
-  if p_j has not record its state
-      Record the state of C as the empty set
-      Execute the "marker sending rule"
-  else
-      Record the state of C as the set of messages
-      received along C after p_j,s state was recorded
-      and before p_j received the marker along C
-```
-
-## ~~Spezialetti-Kearns algorithm~~
-## ~~Lai-Yang algorithm~~
-## ~~Mattern's algorithm~~
-## ~~Acharya-Badrinath algorithm~~
-## ~~Alagar-Venkatesan algorithm~~
-## ~~Manivannan-Netzer-Singhal algorithm~~
-## ~~R-graph~~~~~~~~
-
 # Message Ordering and Group Communication - Chapter 6
 
-## Asynchronous and FIFO Executions
+Message ordering is an important to understand or design a distributed
+system.  At least four paradigms are defined (i) non-FIFO, (ii) FIFO,
+(iii) causal order, and (iv) synchronous order.  There is a natural
+hierarchy among these orderings.
+
+ASYNC(or non-FIFO) -> FIFO -> CAUSAL_ORDER -> SYNC(or RSC).
+
+## Asynchronous (aka non-FIFO)
+
+An execution for which the causality relation is a partial order.
+
+## FIFO Executions
+
+On any logical link messages are necessarily delivered in the order in
+which they are sent.  This can occur on links that may be inherently
+non-FIFO, but most connection-oriented protocols provide FIFO through
+sequencing (e.g. TCP).
+
 ## Casual Order
+
+A send event happens before a corresponding receive event for all
+processes in the system for all pairs of send/receive events.  You can
+buffer a received message if you haven't received one ahead of it.
+
 ## Synchronous Executions
+
+Involves a handshake between sender and receiver.  Corresponding send
+and receive event can be seen as occuring simultaneously (atomically).
+
 ## Asynchronous Execution with Synchronous Communications
-## RSC Executions
+
+Maybe deadlock since two processes may each issue a send simultaenously
+and since the events are each process should correspond to each other,
+neither can receive.
+
+## Executions realizable with synchronous communication (RSC)
+
+In an Async (A)-execution, messgaes can be made to appear instantenous
+if there exists a linear extension o fthe execution, such that each send
+event is immediately followed by its corresponding receive event.
+
 ## Crown
+
+Graph structure that characterizes the execution of an RSC execution.
+Use the crown test to determine cyclic dependencies.
+
 ## ~~Bagrodia's Algorithm for Binary Rendezvous~~
+
+## Causal Order (CO)
+
+Order of messages.
+
+**Safety:** messgae may need to be buffered until systemwide messages
+sent in the causal past have arrived.
+
+**Liveness:** message that arrives must eventually be delivered.
+
 ## Raynal-Schiper-Toueg (RST) Algorithm
-## Optimal KS Algorithm for CO
+
+**Algorithm:**
+
+```
+# local variables
+int SENT[1 ... n, 1 ... n]
+int DELIV[1 ...n]           // DELIV[k] == # messages sent by k that are
+                               deliver locally
+
+(1)  send event, where P_i wants to send message M to P_j
+(1a) send (M,SENT) to P_j
+(1b) SENT[i,j] = SENT[i,j] + 1
+
+(2)  message arrival, when (M,ST) arrives at P_i from P_j
+(2a) deliver M to P_i when for each process x
+(2b)     DELIV[x] >= ST[x,i]
+(2c) (forall)x,y, SENT[x,y] = max(SENT[x,y], ST[x,y])
+(2d) DELIV[j] = DELIV[j] + 1
+```
+Algorithm that attempts to reduce the overhead of carrying a lot of
+prior messages to help determine whether it is safe for the message to
+be delivered at the receiver.
+
+## ~~Optimal KS Algorithm for CO~~
+
 ## Total Message Order
+
+All messages are received in the same order by the recipients of the
+messages.
+
+### Centralized algorithm for total order
+
+Enforces total order in a system with FIFO channels.  Each process sends
+the messgae it wants to broadcast to a centralized process, which relays
+the messages to every other process over the FIFO channel.  The drawback
+with this approach is that it has a single point of failure and
+congestion.
+
+**Complexity:** Each message transimission takes two messgae hops and
+exactly n messages in a system of n processes.
+
+```
+(1)  When process P_i wants to multicast a message M to group G
+(1a) send M(i,G) to central coordinator
+
+(2)  When M(i,G) arrives from P_i at the central coordinator
+(2a) send M(i,G) to all members of the group G
+
+(3)  When M(i,G) arrives at P_j from the central coordinator
+(3a) deliver M(i,G) to the application
+```
+
+## Three-phase distributed algorithm
+
+A distributed algorithm that enforces total and causal order for closed
+groups.
+
+**Algorithm:**
+
+```
+record Q_entry
+    M: int                 // the application message
+    tag: int               // unique message identifier
+    sender_id: int         // sender of the message
+    timestamp: int         // tentative timestamp assigned to message
+    deliverable: boolean   // whether message is ready for delivery
+
+# local variables
+query of Q_entry: temp_Q, delivery_Q
+int: clock          // used as a variant of Lamport's scalar clock
+int: priority       // used to track the highest proposed timestamp
+
+# message types
+REVISE_TS(M, i, tag, ts)   // phase 1 msg sent by P_i, w/ initial timestamp ts
+PROPOSED_TS(j,i,tag,ts)    // phase 2 msg sent by P_j, w/ revised timestamp, to P_i
+FINAL_TS(i,tag,ts)         // phase 3 msg sent by P_i, w/ final timetamp
+
+(1)  when process P_i wants to multicast a msg M with a tag tag
+(1a) clock = clock + 1
+(1b) send REVISE_TS(M,i,tag,clock) to all processes
+(1c) temp_ts = 0
+(1d) await PROPOSED_TS(j,i,tag,ts) from each process P_j
+(1e) forall j E N, do temp_ts = max(temp_ts,ts_j)
+(1f) send FINAL_TS(i,tag,temp_ts) to all processes
+(1g) clock = max(clock,temp_ts)
+
+(2)  When REVISE_TS(M,j,tag,clk) arrives from P_j
+(2a) priority = max(priority + 1, clk)
+(2b) insert (M, tag, priority, undeliverable) in temp_Q  // at end of queue
+(2c) send PROPOSED_TS(i,j,tag,priority) to P_j
+
+(3)  When FINAL_TS(j,x,clk) arrives from P_j
+(3a) IdentifyentryQ_eintemp_Q, where Q_e.tag = xandQ_e.sender_id = j
+(3b) mark Q_e.deliverable as true
+(3c) Update Q_e.timestamp to clk and re-sort temp_Q based on the timestamp field
+(3d) if (head(temp_Q)).tag == Q_e.tag
+(3e)     move Q_e from temp_Q to deliver_Q
+(3f)     while (head(temp_Q)).deliverable is true
+(3g)         dequeue head(temp_Q) and insert in deliver_Qy
+
+(4)  When P_i removes a messgae (M,tag,j,ts,deliverable) from head(delivery_Q)
+(4a) clock = max(clock,ts) + 1
+```
+
 ## Multicast
+
+Four possible multicast algorithms:
+
+* SSSG - single source and single destination group
+* MSSG - multiple source and single destination group
+* SSMG - single source and multiple destination group
+* MSMG - multiple source and multiple destination group
+
 ## Reverse Path Forwarding (RPF)
+
 ## Steiner Trees
 
+The problem of finding a spanning tree that spans only all nodes
+participating in a multicast group.  Basically you have to delete the
+edges as necessary.
+
+# Reasoning with Knowledge - Chapter 8
+
+## Muddy Children Puzzle
+
+*k*, where *k >= 1*, of *n* children have mud on their foreheads.  Each
+child can see each other, but not their own forehead.  At least one
+child has mud on their forehead.  Father states that at least one of
+them has mud on their faces.  Father asks, "do you have mud on your
+forehead?" which is heard by all children.  First k - 1 times, all
+cihldren will say no, and the *k*th time, the children with mud on their
+foreheads will all say yes.
+
+If *k* == 1, the single muddy child, seeing no other muddy children and
+knowing the announcement will conclude that he/she is the muddy child.
+
+If *k* == 2, the first time dad asked, neither can answer in the
+affirmative. But when m1 hears the negative answer of m2, will reason
+that he himself must have mud on his face.
+
+And so on.
+
+If the father doesn't make the initial statement that at least one has
+mud on their faces, because they can't distinquish between having mud on
+their faces or not.  They do not have "common knowledge" with which to
+start the reasoning process.
+
+## Kripke Structures
+
+**Definition:** A Kripke structure M for n agents and a set of primitive
+propositions *phi* is a tuple (S, pi, K_1, ... K_n), where the
+components of this tuple are as follows:
+
+1. S is the set of all consistent states (or possible worlds), with
+respect to an execution.
+
+2. Pi is an interpretation that associates a truth assignment to each
+primitive proposition in phi, for each state s E S.  thus forall s E S,
+pi(s) : phi -> {0,1}.
+
+3. K_i is a binary relation on S giving all the pairs of states that are
+indistinguishable by P_i.
+
+We can view the muddy children problem with a kripke structure.  For
+instance, if n = 3 children and k = 2 have mud on their faces... each of
+the 8 states can be described by a boolean n-vector.  We can delete
+portions of the graph as information becomes available.
+
+## Knowledge in Synchronous Systems
+
+You can attain common knowledge by:
+
+* initializing all processes with common knowledge of the fact.
+* by broadcasting the fact to every process in a round of communication,
+  and having all processes know that fact is being broadcast.  Each
+  process can then begin the next round supporting common knowledge.
+  This is the process used in scenario A of the muddy children puzzle.
+
+## Knowledge in Asynchronous Systems
+
+We attain this using a consistent "cut" in the set of executions.
+
+**Theorem 8.2:** There does not exist any protocol for two processes to
+reach common knowledge about a binary value in an asynchronous
+message-passing system with unreliable communication.
+
+For example, S and R need to keep ACKing from the original message to
+each successive ACK, which will go on forever.
+
+**Theorem 8.3**: There does not exist any protocol for two processes to
+reach common knowledge about a binary value in a reliable asynchronous
+message-passing system without an upper bound on message transmission
+times.
+
+## Variants of common knowledge
+
+These are weaker forms of common knowledge.
+
+**Epsilon common knowlege:**  Reach agreement within a time bound.
+
+**Eventual common knowledge:** reach agreement at some point in the
+future, not necessarily at some consistent state.
+
+**Timestamped common knowledge:** Reach agreement at local states having
+the same local clock value.
+
+**Concurrent common knowledge:** reach agreement at local cuts that
+belong to a consistent cut.  This is the most common.
+
+## Concurrent Knowledge
+
+These rely on consistent cuts.  In message-passing, they use markers.
+
+### Snapshot-based Algorithm
+
+Each process knows each other is participating in the same algorithm.
+
+### Three-phase Send Inhibitory Algorithm
+
+### Three-phase Send Inhibitory Tree Algorithm
+## Inhibitory Ring Algorithm
+
 # Consensus and Agreement
+
+Many forms of coordination require agreement.  Assumptions:
+
+**Failure models:** Choice of the failure model (see Chapter 5)
+determines the feasability and complexity of solving consensus.
+
+**Synchronous/asynchronous communication:** Async poses problem in a
+failure scenario because we can't differentiate between failure and
+taking a long time.  Sync we can assume some default value.
+
+**Network connectivity:** The system has full logical connectivity.
+
+**Sender identification:** A receiver always knows the identity of the
+sender.
+
+**Channel reliability:** Channels are reliable.
+
+**Authenticated vs. non-authenticated messages:** We will deal only with
+unauthenticated.
+
+**Agreement variable:** will be a boolean.
+
 ## Consensus Algorithm for Crash Failures (MP, synchronous)
 ## Upper Bound on Byzantine Processes
 ## Byzantine Generals (recursive formulation), (sync, msg-passing)
@@ -713,21 +1026,6 @@ On receiving a marker along channel C:
 ## Wait-free Universal Algorithm
 ## Async Wait-free Renaming using Atomic Shared Object
 ## The Spitter
-
-# Reasoning with Knowledge
-## Muddy Children Puzzle
-## Kripke Structures
-## Common Knowledge for Asynchronous Systems
-## Concurrent Knowledge
-### Snapshot-based Algorithm
-### Three-phase Send Inhibitory Algorithm
-### Three-phase Send Inhibitory Tree Algorithm
-## Inhibitory Ring Algorithm
-## Knowledge Transfer
-## Knowledge and Clocks
-### Scalar clocks
-### Vector clocks
-### Matrix Clocks
 
 # Peer-to-peer computing and overlay graphs
 ## Data Indexing and Overlays
