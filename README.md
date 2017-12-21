@@ -1,5 +1,18 @@
 # UIC CS 553 - Fall 2017
 
+*Note: This is an archive of some material and notes for the distributed
+systems class I took as part of my first semester as a PhD student.
+This material is very rough, incomplete, and imperfect.  All errors and
+faults are my own.  It is simply a version of some part of the effort
+and work that went into the class.  It is for my personal public record
+and posterity, although maybe it is also of some odd interest to the
+passerby?  I found this course to very helpful, pertinent, and enjoyable
+for my studies.  The exams were particularly challenging, and the
+demands of studying for them, preparing for the presenation, and
+completing a final report along with my other work, teaching, research,
+and personal life obligations left me wishing there were more hours in
+the day.*
+
 [Course Home Page](https://www.cs.uic.edu/~ajayk/c553fa17.html)
 
 The class presentation was on CRDTs and can be found in the
@@ -8,10 +21,13 @@ peer-to-peer DNS which can be found in the report subdirectory.
 
 Lecture and book summary as well as study notes for exams to follow.
 
-For each topic, identify the ''what'', ''why'', and ''how''.   That is:
+For each lecture topic, I tried identify the ''what'', ''why'', and
+''how''.   That is:
 
-* *What:* A summary of topic, idea, or algorithm.  Some assumptions may be made, but others may need to be identified.
-* 'Why:* Make the argument for the reason to study this item.  Why is or was it important in the development of this field of science.
+* *What:* A summary of topic, idea, or algorithm.  Some assumptions may
+  be made, but others may need to be identified.
+* 'Why:* Make the argument for the reason to study this item.  Why is or
+  was it important in the development of this field of science.
 * *How:* If this is an algorithm or technology, explain how this works.
 
 # Introduction - Chapter 1
